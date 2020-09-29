@@ -38,6 +38,7 @@ class WPUPA_Admin {
 		add_action('init', array( $this, 'thickbox_model_init'));
 		add_action('wp_ajax_thickbox_model_view', array( $this, 'thickbox_model_view'));
 		add_action('wp_ajax_nopriv_thickbox_model_view', array( $this, 'thickbox_model_view'));
+		
 	}
 
     /**
@@ -67,6 +68,8 @@ class WPUPA_Admin {
 
 		wp_register_script( 'wp-user-profile-avatar-admin-avatar', WPUPA_PLUGIN_URL . '/assets/js/admin-avatar.min.js', array( 'jquery' ), WPUPA_VERSION, true);
 		
+		wp_register_script( 'wp-user-profile-avatar-admin-editor', WPUPA_PLUGIN_URL . '/assets/js/admin-editor.js');
+		
 		wp_localize_script( 'wp-user-profile-avatar-admin-avatar', 'wp_user_profile_avatar_admin_avatar', array( 
 								'thinkbox_ajax_url' 	 => admin_url( 'admin-ajax.php' ) . '?height=600&width=770&action=thickbox_model_view',
 								'thinkbox_title' 	 =>  __( 'WP User Profile Avatar', 'wp-user-profile-avatar'),
@@ -79,6 +82,10 @@ class WPUPA_Admin {
 
 		wp_enqueue_style( 'wp-user-profile-avatar-backend' );
 		wp_enqueue_script( 'wp-user-profile-avatar-admin-avatar' );
+		
+		wp_enqueue_media();
+		wp_enqueue_editor();
+		wp_enqueue_script( 'wp-user-profile-avatar-admin-editor' );
 	}
 
     /**
@@ -104,6 +111,8 @@ class WPUPA_Admin {
 
 		$wpupa_attachment_id = get_user_meta($user_id, '_wpupa_attachment_id', true);
 		$wpupa_url = get_user_meta($user_id, '_wpupa_url', true);
+		
+		$designation_value = get_user_meta( $user_id, 'designation', true );
 
 		?>
 		<h3><?php _e('WP User Profile Avatar', 'wp-user-profile-avatar'); ?></h3>
@@ -155,9 +164,82 @@ class WPUPA_Admin {
 				    </div>
 				</td>
 			</tr>
+			
+			<tr>
+					<th><label for="designation">Designation</label></th>		 
+					<td><input type="text" class="input-text form-control regular-text" name="designation" id="designation" value="<?php echo $designation_value; ?>"/></td>		 
+			</tr>
 		</table>
 		<?php
 	}
+	 
+	public function add_social_area($profileuser) {
+        $user_id = $profileuser->data->ID;
+
+        $social_links = Simple_Author_Box_Helper::get_user_social_links($user_id);
+        $social_icons = apply_filters('sabox_social_icons', Simple_Author_Box_Helper::$social_icons);
+
+	    unset($social_icons['user_email']);
+
+        ?>
+        <div class="sab-user-profile-wrapper">
+            <h2><?php esc_html_e('Social Media Links (Simple Author Box)', 'saboxplugin'); ?></h2>
+            <table class="form-table" id="sabox-social-table">
+                <?php
+
+                if (!empty($social_links)) {
+                    foreach ($social_links as $social_platform => $social_link) {
+                        ?>
+                        <tr>
+                            <th>
+                                <span class="sabox-drag"></span>
+                                <select name="sabox-social-icons[]">
+                                    <?php foreach ($social_icons as $sabox_social_id => $sabox_social_name) { ?>
+                                        <option value="<?php echo esc_attr($sabox_social_id); ?>" <?php selected($sabox_social_id, $social_platform); ?>><?php echo esc_html($sabox_social_name); ?></option>
+                                    <?php } ?>
+                                </select>
+                            </th>
+                            <td>
+                                <input name="sabox-social-links[]"
+                                       type="<?php echo ('whatsapp' == $social_platform || 'phone' == $social_platform) ? 'tel' : 'text'; ?>"
+                                       class="regular-text"
+                                       value="<?php echo ( 'whatsapp' == $social_platform  || 'telegram' == $social_platform || 'skype' == $social_platform || 'phone' == $social_platform ) ? esc_attr($social_link) : esc_url( $social_link ); ?>">
+                                <span class="dashicons dashicons-trash"></span>
+                            <td>
+                        </tr>
+                        <?php
+                    }
+                } else {
+                    ?>
+                    <tr>
+                        <th>
+                            <span class="sabox-drag"></span>
+                            <select name="sabox-social-icons[]">
+                                <?php foreach ($social_icons as $sabox_social_id => $sabox_social_name) { ?>
+                                    <option value="<?php echo esc_attr($sabox_social_id); ?>"><?php echo esc_html($sabox_social_name); ?></option>
+                                <?php } ?>
+                            </select>
+                        </th>
+                        <td>
+                            <input name="sabox-social-links[]" type="text" class="regular-text" value="">
+                            <span class="dashicons dashicons-trash"></span>
+                        <td>
+                    </tr>
+                    <?php
+                }
+
+                ?>
+
+            </table>
+
+            <div class="sabox-add-social-link">
+                <a href="#"
+                   class="button button-primary button-hero"></span><?php esc_html_e('+ Add new social platform', 'saboxplugin'); ?></a>
+            </div>
+        </div>
+
+        <?php
+    }
 
     /**
      * wpupa_save_fields function.
@@ -173,6 +255,8 @@ class WPUPA_Admin {
 		{
 			$wpupa_url=esc_url_raw($_POST['wpupa_url']);
 			$wpupa_attachment_id=absint($_POST['wpupa_attachment_id']);
+			
+			$designation_data = $_POST['designation'];
 
 			if(isset($wpupa_url,$wpupa_attachment_id))
 			{
@@ -189,12 +273,54 @@ class WPUPA_Admin {
 			{
 				update_user_meta( $user_id, '_wpupa_default', '' );
 			}
+			
+			 
+			 update_user_meta( $user_id, 'designation', $designation_data );
 		}
 		else
 		{
 		    status_header( '403' );
 		    die();
 		}
+		
+		
+		if (isset($_POST['sabox-social-icons']) && isset($_POST['sabox-social-links'])) {
+            $social_platforms = apply_filters('sabox_social_icons', Simple_Author_Box_Helper::$social_icons);
+            $social_links     = array();
+
+            foreach ($_POST['sabox-social-links'] as $index => $social_link) {
+                if ($social_link) {
+                    $social_platform = isset($_POST['sabox-social-icons'][$index]) ? $_POST['sabox-social-icons'][$index] : false;
+                    if ($social_platform && isset($social_platforms[$social_platform])) {
+                        if ('whatsapp' == $social_platform || 'phone' == $social_platform) {
+                            $social_links[$social_platform] = esc_html($social_link);
+                        } else {
+                            $social_links[$social_platform] = esc_url_raw($social_link);
+                        }
+                    }
+                }
+            }
+
+			$social_platforms = apply_filters( 'sabox_social_icons', Simple_Author_Box_Helper::$social_icons );
+			$social_links     = array();
+			foreach ( $_POST['sabox-social-links'] as $index => $social_link ) {
+				if ( $social_link ) {
+					$social_platform = isset( $_POST['sabox-social-icons'][ $index ] ) ? $_POST['sabox-social-icons'][ $index ] : false;
+					if ( $social_platform && isset( $social_platforms[ $social_platform ] ) ) {
+						if ( 'whatsapp' == $social_platform  || 'telegram' == $social_platform || 'skype' == $social_platform || 'phone' == $social_platform) {
+							$social_links[ $social_platform ] = esc_html($social_link);
+						} else {
+							$social_links[ $social_platform ] = esc_url_raw( $social_link );
+						}
+					}
+				}
+            }
+
+        update_user_meta($user_id, 'sabox_social_links', $social_links);
+
+        } else {
+            delete_user_meta($user_id, 'sabox_social_links');
+        }
 		
 	}
 	
