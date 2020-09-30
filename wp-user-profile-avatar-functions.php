@@ -359,3 +359,42 @@ if ( ! function_exists( 'get_wpupa_image_link_to' ) ) {
 		) );
 	}
 }
+
+if ( ! function_exists( 'get_social_media_name' ) ) {
+	function get_social_media_name()
+	{
+		return array('facebook'=>'Facebook',
+		'whatsapp'=>'WhatsApp',
+		'instagram'=> 'Instagram',
+		'linkedin'=>'Linkedin',
+		'pinterest'=>'Pinterest',
+		'skype'=>'Skype',
+		'twitter'=>'Twitter',
+		'yahoo'=>'Yahoo',
+		'youtube'=>'Youtube',
+		'telegram'=>'Telegram',
+		'phone'=>'Phone');
+	}
+}
+
+if ( ! function_exists( 'get_social_icon_sign' ) ) {
+	function get_social_icon_sign($icon_name = '')
+	{
+		if($icon_name =='facebook'){$iconsign = '<i class="fa fa-facebook-square" aria-hidden="true"></i>';}
+		else if($icon_name =='whatsapp'){$iconsign = '<i class="fa fa-whatsapp" aria-hidden="true"></i>';}
+		else if($icon_name =='instagram'){$iconsign = '<i class="fa fa-instagram" aria-hidden="true"></i>';}
+		else if($icon_name =='linkedin'){$iconsign = '<i class="fa fa-linkedin-square" aria-hidden="true"></i>';}
+		else if($icon_name =='pinterest'){$iconsign = '<i class="fa fa-pinterest-square" aria-hidden="true"></i>';}
+		else if($icon_name =='skype'){$iconsign = '<i class="fa fa-skype" aria-hidden="true"></i>';}
+		else if($icon_name =='twitter'){$iconsign = '<i class="fa fa-twitter-square" aria-hidden="true"></i>';}
+		else if($icon_name =='yahoo'){$iconsign = '<i class="fa fa-yahoo" aria-hidden="true"></i>';}
+		else if($icon_name =='youtube'){$iconsign = '<i class="fa fa-youtube-play" aria-hidden="true"></i>';}
+		else if($icon_name =='telegram'){$iconsign = '<i class="fa fa-telegram" aria-hidden="true"></i>';}
+		else if($icon_name =='phone'){$iconsign = '<i class="fa fa-phone-square" aria-hidden="true"></i>';}
+		else {$iconsign = '';}
+		
+		return $iconsign;
+					
+		
+	}
+}

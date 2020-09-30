@@ -3,7 +3,7 @@
  * user profile shortcode
  */
 if ( ! defined( 'ABSPATH' ) ) exit; ?>
-
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"/>
 <div class="wp-user-profile-avatar">
 	<a href="<?php echo $link; ?>" target="<?php echo $target; ?>" class="wp-user-profile-avatar-link">
 		<img src="<?php echo $image_url; ?>" class="size-<?php echo $size; ?> <?php echo $align; ?>"  alt="<?php echo $content; ?>" />
@@ -13,7 +13,6 @@ if ( ! defined( 'ABSPATH' ) ) exit; ?>
 	    <?php 
 		global $post;
         $wp_user_author_id = $post->post_author;
-		
 		$wp_author_link = sprintf( '<a href="%s" class="vcard author" rel="author" itemprop="url"><span class="fn" itemprop="name">%s</span></a>', esc_url( get_author_posts_url( $wp_user_author_id ) ), esc_html( get_the_author_meta( 'display_name', $wp_user_author_id ) ) );
 		$author_description = apply_filters( 'user_description', get_the_author_meta( 'description', $wp_user_author_id ), $wp_user_author_id );
 		
@@ -43,6 +42,29 @@ if ( ! defined( 'ABSPATH' ) ) exit; ?>
         }
         echo  '</div>' ;
         echo  '</div>' ;
+		
+		//social media icon
+		$social_link_data = get_user_meta( $wp_user_author_id, 'social_profile_link_data', true );
+		if(!empty($social_link_data)){
+			foreach ( $social_link_data as $key => $value ) {
+				if ( 'whatsapp' == $key ) {
+                    $value = 'https://wa.me/' . $value;
+                }
+                if ( 'phone' == $key ) {
+                    $value = 'tel:' . $value;
+                }
+                if ( 'telegram' == $key ) {
+                    $value = 'https://t.me/' . $value;
+                }
+                if ( 'skype' == $key ) {
+                    $value = 'skype:' . $value . '?call';
+                }
+                if ( !empty($key) ) {
+                    echo '<a href="'.$value.'" style="padding: 5px 5px 5px 5px;text-decoration: none !important;">'.get_social_icon_sign($key).'</a>';
+                }
+				
+			}
+		}
 		
 		?>
 </div>
